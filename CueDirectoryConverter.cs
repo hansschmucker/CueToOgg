@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace CueToOgg
@@ -15,11 +13,11 @@ namespace CueToOgg
 
         public List<Track> tracks;
 
-        public TextBox logArea;
+        public LogApplication app;
 
-        public CueDirectoryConverter(TextBox aLogArea)
+        public CueDirectoryConverter(LogApplication aApp)
         {
-            logArea = aLogArea;
+            app = aApp;
         }
 
         public void StartProcessing()
@@ -27,7 +25,7 @@ namespace CueToOgg
 
             if (!File.Exists(Path.GetDirectoryName(Application.ExecutablePath) + "\\bin\\ffmpeg.exe"))
             {
-                logArea.AppendText("FFMPEG not found. Cannot continue.\n");
+                app.FatalExit("FFMPEG not found. Cannot continue.\n");
                 return;
             }
 
@@ -40,14 +38,13 @@ namespace CueToOgg
             if (files == null || files.Length == 0)
             {
 
-                logArea.AppendText("No cue sheet found in current directory. Please select the directory containing them.\n");
-                MainForm.ActiveForm.Invalidate();
+                app.Log("No cue sheet found in current directory. Please select the directory containing them.\n");
 
                 var pathFinder = new FolderBrowserDialog();
                 var result = pathFinder.ShowDialog();
                 if (result != DialogResult.OK || pathFinder.SelectedPath == null || pathFinder.SelectedPath == "" || !Directory.Exists(pathFinder.SelectedPath))
                 {
-                    logArea.AppendText("No path selected. Cannot continue.\n");
+                    app.FatalExit("No path selected. Cannot continue.\n");
                     return;
                 }
 
@@ -58,14 +55,12 @@ namespace CueToOgg
 
                 if (files.Length == 0)
                 {
-                    logArea.AppendText("No cue sheet found in path. Cannot continue.\n");
+                    app.FatalExit("No cue sheet found in path. Cannot continue.\n");
                     return;
                 }
             }
 
-            logArea.AppendText(files.Length.ToString() + " cue sheets found in path.\n");
-            if (MainForm.ActiveForm != null)
-                MainForm.ActiveForm.Invalidate();
+            app.Log(files.Length.ToString() + " cue sheets found in path.\n");
 
             for (var i = 0; i < files.Length; i++)
             {
@@ -74,10 +69,9 @@ namespace CueToOgg
                 CalcLengthAndByteOffsets();
                 ProcessSegments();
             }
-            logArea.AppendText("Done\n");
-            if (MainForm.ActiveForm != null)
-                MainForm.ActiveForm.Invalidate();
-
+            app.Log("Done\n");
+            app.Alert("Done");
+            app.Exit();
         }
 
 
@@ -125,20 +119,14 @@ namespace CueToOgg
             File.WriteAllBytes(outPath, buffer);
 
             var p = new Process();
-            p.StartInfo.FileName = Path.GetDirectoryName(Application.ExecutablePath) + "\\bin\\ffmpeg.exe";
-            p.StartInfo.RedirectStandardOutput = true;
-            p.StartInfo.RedirectStandardError = true;
-            p.StartInfo.UseShellExecute = false;
-            p.StartInfo.CreateNoWindow = true;
-            p.StartInfo.Arguments = "-f s16le -ar 44100 -ac 2 -i \"" + outPath + "\" -aq 8 \"" + outOgg + "\"";
-            p.EnableRaisingEvents = true;
+            p.StartInfo = new ProcessStartInfo(
+                Path.GetDirectoryName(Application.ExecutablePath) + "\\bin\\ffmpeg.exe",
+                "-f s16le -ar 44100 -ac 2 -i \"" + outPath + "\" -aq 8 \"" + outOgg + "\""
+                );
 
-            logArea.AppendText("Encoding file " + outOgg + "\n");
-            if (MainForm.ActiveForm != null)
-                MainForm.ActiveForm.Invalidate();
+            app.Log("Encoding file " + outOgg + "\n");
+            p.StartSilent();
 
-            p.Start();
-            p.WaitForExit();
             File.Delete(outPath);
 
         }
@@ -218,9 +206,8 @@ namespace CueToOgg
                         }
                         else
                         {
-                            logArea.AppendText("Non-binary CD image encountered. Not supported: " + line[line.Length - 1] + "\n");
-                            if (MainForm.ActiveForm != null)
-                                MainForm.ActiveForm.Invalidate();
+                            app.FatalExit("Non-binary CD image encountered. Not supported: " + line[line.Length - 1] + "\n");
+
                         }
 
 
