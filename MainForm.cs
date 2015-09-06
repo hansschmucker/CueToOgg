@@ -37,7 +37,13 @@ namespace CueToOgg
         private void AfterFormLoad(object sender, EventArgs e)
         {
             var converter = new CueDirectoryConverter(this);
-            converter.StartProcessing();
+
+            try {
+                converter.StartProcessing();
+            }catch(Exception ex)
+            {
+                FatalExit(ex.Message);
+            }
         }
     }
 }

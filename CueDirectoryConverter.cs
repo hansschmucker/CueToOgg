@@ -24,10 +24,7 @@ namespace CueToOgg
         {
 
             if (!File.Exists(Path.GetDirectoryName(Application.ExecutablePath) + "\\bin\\ffmpeg.exe"))
-            {
-                app.FatalExit("FFMPEG not found. Cannot continue.\n");
-                return;
-            }
+                throw new Exception("FFMPEG not found. Cannot continue.\n");
 
             string[] files;
             files =
@@ -43,10 +40,7 @@ namespace CueToOgg
                 var pathFinder = new FolderBrowserDialog();
                 var result = pathFinder.ShowDialog();
                 if (result != DialogResult.OK || pathFinder.SelectedPath == null || pathFinder.SelectedPath == "" || !Directory.Exists(pathFinder.SelectedPath))
-                {
-                    app.FatalExit("No path selected. Cannot continue.\n");
-                    return;
-                }
+                    throw new Exception("No path selected. Cannot continue.\n");
 
                 files =
                     Directory.GetFiles(pathFinder.SelectedPath, "*.cue").Concat(
@@ -54,10 +48,7 @@ namespace CueToOgg
                     ;
 
                 if (files.Length == 0)
-                {
-                    app.FatalExit("No cue sheet found in path. Cannot continue.\n");
-                    return;
-                }
+                    throw new Exception("No cue sheet found in path. Cannot continue.\n");
             }
 
             app.Log(files.Length.ToString() + " cue sheets found in path.\n");
@@ -72,6 +63,7 @@ namespace CueToOgg
             app.Log("Done\n");
             app.Alert("Done");
             app.Exit();
+            return;
         }
 
 
@@ -200,18 +192,10 @@ namespace CueToOgg
                 {
                     case "FILE":
                         if (line[line.Length - 1] == "BINARY")
-                        {
                             currentBin = Path.GetDirectoryName(path) + "\\" + cue[i].TrimTo('"');
-
-                        }
                         else
-                        {
-                            app.FatalExit("Non-binary CD image encountered. Not supported: " + line[line.Length - 1] + "\n");
-
-                        }
-
-
-
+                            throw new Exception("Non-binary CD image encountered. Not supported: " + line[line.Length - 1] + "\n");
+                        
                         break;
                     case "TRACK":
                         addSegment(currentBin, currentTrack, currentOffset, currentGap, currentSectorSize, currentTrackIsAudio);
@@ -241,9 +225,7 @@ namespace CueToOgg
                         break;
                     case "INDEX":
                         if (parseDecInt(line[1]) == 1)
-                        {
                             currentOffset = timeToOffset(line[2]);
-                        }
                         break;
 
                 }
