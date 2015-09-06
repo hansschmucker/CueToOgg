@@ -1,6 +1,6 @@
 ﻿namespace CueToOgg
 {
-    partial class Form1
+    partial class MainForm
     {
         /// <summary>
         /// Required designer variable.
@@ -28,34 +28,31 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
+            this.logArea = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
-            // textBox1
+            // logArea
             // 
-            this.textBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.textBox1.Location = new System.Drawing.Point(0, 0);
-            this.textBox1.Multiline = true;
-            this.textBox1.Name = "textBox1";
-            this.textBox1.ReadOnly = true;
-            this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox1.Size = new System.Drawing.Size(437, 274);
-            this.textBox1.TabIndex = 1;
-            this.textBox1.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
+            this.logArea.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.logArea.Location = new System.Drawing.Point(0, 0);
+            this.logArea.Multiline = true;
+            this.logArea.Name = "logArea";
+            this.logArea.ReadOnly = true;
+            this.logArea.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.logArea.Size = new System.Drawing.Size(437, 274);
+            this.logArea.TabIndex = 1;
             // 
-            // Form1
+            // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(437, 274);
-            this.Controls.Add(this.textBox1);
+            this.Controls.Add(this.logArea);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.Name = "Form1";
+            this.Name = "MainForm";
             this.Text = "Tapper[ware] CUEtoOGG";
-            this.Load += new System.EventHandler(this.Form1_Load);
-            this.Shown += new System.EventHandler(this.Form1_Shown);
-            this.Enter += new System.EventHandler(this.Form1_Enter);
+            this.Shown += new System.EventHandler(this.AfterFormLoad);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -63,7 +60,7 @@
 
         #endregion
 
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox logArea;
     }
 }
 

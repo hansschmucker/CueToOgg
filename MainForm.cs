@@ -8,32 +8,27 @@ using System.Linq;
 
 namespace CueToOgg
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
-        public Form1()
+        public MainForm()
         {
             InitializeComponent();
         }
-        private void Form1_Load(object sender, EventArgs e)
+
+        private void AfterFormLoad(object sender, EventArgs e)
         {
+            StartProcessing();
         }
 
-        private void Form1_Shown(object sender, EventArgs e)
-        {
 
-            button1_Click(null, null);
-        }
+        public List<Track> tracks;
 
-        private void Form1_Enter(object sender, EventArgs e)
-        {
-
-        }
-        private void button1_Click(object sender, EventArgs e)
+        private void StartProcessing()
         {
 
             if(!File.Exists(Path.GetDirectoryName(Application.ExecutablePath) + "\\bin\\ffmpeg.exe"))
             {
-                textBox1.AppendText("FFMPEG not found. Cannot continue.\n");
+                logArea.AppendText("FFMPEG not found. Cannot continue.\n");
                 return;
             }
 
@@ -46,14 +41,14 @@ namespace CueToOgg
             if (files == null || files.Length == 0)
             {
 
-                textBox1.AppendText("No cue sheet found in current directory. Please select the directory containing them.\n");
-                Form1.ActiveForm.Invalidate();
+                logArea.AppendText("No cue sheet found in current directory. Please select the directory containing them.\n");
+                MainForm.ActiveForm.Invalidate();
 
                 var pathFinder = new FolderBrowserDialog();
                 var result = pathFinder.ShowDialog();
                 if (result != DialogResult.OK || pathFinder.SelectedPath == null || pathFinder.SelectedPath == "" || !Directory.Exists(pathFinder.SelectedPath))
                 {
-                    textBox1.AppendText("No path selected. Cannot continue.\n");
+                    logArea.AppendText("No path selected. Cannot continue.\n");
                     return;
                 }
 
@@ -64,25 +59,25 @@ namespace CueToOgg
                 
                 if (files.Length == 0)
                 {
-                    textBox1.AppendText("No cue sheet found in path. Cannot continue.\n");
+                    logArea.AppendText("No cue sheet found in path. Cannot continue.\n");
                     return;
                 }
             }
 
-            textBox1.AppendText(files.Length.ToString()+" cue sheets found in path.\n");
-            if (Form1.ActiveForm != null)
-                Form1.ActiveForm.Invalidate();
+            logArea.AppendText(files.Length.ToString()+" cue sheets found in path.\n");
+            if (MainForm.ActiveForm != null)
+                MainForm.ActiveForm.Invalidate();
 
             for (var i = 0; i < files.Length; i++)
             {
-                foundAudioSegment = new List<Track>();
+                tracks = new List<Track>();
                 SplitCue(files[i]);
                 CalcLengthAndByteOffsets();
                 ProcessSegments();
             }
-            textBox1.AppendText("Done\n");
-            if (Form1.ActiveForm != null)
-                Form1.ActiveForm.Invalidate();
+            logArea.AppendText("Done\n");
+            if (MainForm.ActiveForm != null)
+                MainForm.ActiveForm.Invalidate();
 
         }
 
@@ -90,18 +85,18 @@ namespace CueToOgg
         private void CalcLengthAndByteOffsets()
         {
             var runningOffset = 0;
-            for (var i = 0; i < (foundAudioSegment.Count-1); i++)
+            for (var i = 0; i < (tracks.Count-1); i++)
             {
-                var nextOffset = foundAudioSegment[i + 1].offsetInSectors;
-                var currentOffset= foundAudioSegment[i].offsetInSectors;
-                var lengthInSectors = nextOffset - currentOffset - foundAudioSegment[i].preGap;
-                foundAudioSegment[i].length = lengthInSectors * foundAudioSegment[i].sectorSize;
-                foundAudioSegment[i].offsetInFile = runningOffset;
-                runningOffset += foundAudioSegment[i].length;
+                var nextOffset = tracks[i + 1].offsetInSectors;
+                var currentOffset= tracks[i].offsetInSectors;
+                var lengthInSectors = nextOffset - currentOffset - tracks[i].preGap;
+                tracks[i].length = lengthInSectors * tracks[i].sectorSize;
+                tracks[i].offsetInFile = runningOffset;
+                runningOffset += tracks[i].length;
             }
 
-            foundAudioSegment[foundAudioSegment.Count - 1].offsetInFile = runningOffset;
-            foundAudioSegment[foundAudioSegment.Count - 1].length = -1;
+            tracks[tracks.Count - 1].offsetInFile = runningOffset;
+            tracks[tracks.Count - 1].length = -1;
 
         }
 
@@ -139,9 +134,9 @@ namespace CueToOgg
             p.StartInfo.Arguments = "-f s16le -ar 44100 -ac 2 -i \"" + outPath + "\" -aq 8 \"" + outOgg + "\"";
             p.EnableRaisingEvents = true;
 
-            textBox1.AppendText("Encoding file "+ outOgg+"\n");
-            if(Form1.ActiveForm!=null)
-                Form1.ActiveForm.Invalidate();
+            logArea.AppendText("Encoding file "+ outOgg+"\n");
+            if(MainForm.ActiveForm!=null)
+                MainForm.ActiveForm.Invalidate();
 
             p.Start();
             p.WaitForExit();
@@ -151,9 +146,9 @@ namespace CueToOgg
 
         private void ProcessSegments()
         {
-            for(var i = 0; i < foundAudioSegment.Count; i++)
+            for(var i = 0; i < tracks.Count; i++)
             {
-                ExtractSegment(foundAudioSegment[i]);
+                ExtractSegment(tracks[i]);
             }
         }
 
@@ -181,7 +176,6 @@ namespace CueToOgg
 
 
 
-        public List<Track> foundAudioSegment;
         
         private void addSegment(string file, string trackNum, int trackOffset, int padding, int sectorSize, bool isAudio)
         {
@@ -194,7 +188,7 @@ namespace CueToOgg
                 t.sectorSize = sectorSize;
                 t.isAudio = isAudio;
                 t.preGap = padding;
-                foundAudioSegment.Add(t);
+                tracks.Add(t);
             }
         }
 
@@ -225,7 +219,9 @@ namespace CueToOgg
                         }
                         else
                         {
-                            currentBin = "";
+                            logArea.AppendText("Non-binary CD image encountered. Not supported: "+ line[line.Length - 1] + "\n");
+                            if (MainForm.ActiveForm != null)
+                                MainForm.ActiveForm.Invalidate();
                         }
                         
 
@@ -267,11 +263,7 @@ namespace CueToOgg
             }
             addSegment(currentBin, currentTrack, currentOffset, currentGap, currentSectorSize, currentTrackIsAudio);
         }
-
-        private void textBox1_TextChanged(object sender, EventArgs e)
-        {
-
-        }
+        
 
 
     }
