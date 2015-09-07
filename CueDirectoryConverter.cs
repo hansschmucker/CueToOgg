@@ -13,57 +13,87 @@ namespace CueToOgg
 
         public List<Track> tracks;
 
-        public LogApplication app;
+        public MainForm app;
 
-        public CueDirectoryConverter(LogApplication aApp)
+        public CueDirectoryConverter(MainForm aApp)
         {
             app = aApp;
         }
 
+        private void Log(string message)
+        {
+            if(app.Created)
+                app.Invoke(app.Log, new object[] { (string)message });
+        }
+
+        private void Exit()
+        {
+            if (app.Created)
+                app.Invoke(app.Exit);
+        }
+
+        private void FatalExit(string message)
+        {
+            if (app.Created)
+                app.Invoke(app.FatalExit, new object[] { (string)message });
+        }
+
+        private void Alert(string message)
+        {
+            if (app.Created)
+                app.Invoke(app.Alert, new object[] { (string)message });
+        }
+
         public void StartProcessing()
         {
-
-            if (!File.Exists(Path.GetDirectoryName(Application.ExecutablePath) + "\\bin\\ffmpeg.exe"))
-                throw new Exception("FFMPEG not found. Cannot continue.\n");
-
-            string[] files;
-            files =
-                Directory.GetFiles(Path.GetDirectoryName(Application.ExecutablePath), "*.cue").Concat(
-                Directory.GetFiles(Path.GetDirectoryName(Application.ExecutablePath), "*.inst")).ToArray()
-                ;
-
-            if (files == null || files.Length == 0)
+            try
             {
+                if (!File.Exists(Path.GetDirectoryName(Application.ExecutablePath) + "\\bin\\ffmpeg.exe"))
+                    throw new Exception("FFMPEG not found. Cannot continue.\n");
 
-                app.Log("No cue sheet found in current directory. Please select the directory containing them.\n");
-
-                var pathFinder = new FolderBrowserDialog();
-                var result = pathFinder.ShowDialog();
-                if (result != DialogResult.OK || pathFinder.SelectedPath == null || pathFinder.SelectedPath == "" || !Directory.Exists(pathFinder.SelectedPath))
-                    throw new Exception("No path selected. Cannot continue.\n");
-
+                string[] files;
                 files =
-                    Directory.GetFiles(pathFinder.SelectedPath, "*.cue").Concat(
-                    Directory.GetFiles(pathFinder.SelectedPath, "*.inst")).ToArray()
+                    Directory.GetFiles(Path.GetDirectoryName(Application.ExecutablePath), "*.cue").Concat(
+                    Directory.GetFiles(Path.GetDirectoryName(Application.ExecutablePath), "*.inst")).ToArray()
                     ;
 
-                if (files.Length == 0)
-                    throw new Exception("No cue sheet found in path. Cannot continue.\n");
-            }
+                if (files == null || files.Length == 0)
+                {
 
-            app.Log(files.Length.ToString() + " cue sheets found in path.\n");
+                    Log("No cue sheet found in current directory. Please select the directory containing them.\n");
 
-            for (var i = 0; i < files.Length; i++)
+                    var pathFinder = new FolderBrowserDialog();
+                    var result = pathFinder.ShowDialog();
+                    if (result != DialogResult.OK || pathFinder.SelectedPath == null || pathFinder.SelectedPath == "" || !Directory.Exists(pathFinder.SelectedPath))
+                        throw new Exception("No path selected. Cannot continue.\n");
+
+                    files =
+                        Directory.GetFiles(pathFinder.SelectedPath, "*.cue").Concat(
+                        Directory.GetFiles(pathFinder.SelectedPath, "*.inst")).ToArray()
+                        ;
+
+                    if (files.Length == 0)
+                        throw new Exception("No cue sheet found in path. Cannot continue.\n");
+                }
+
+                Log(files.Length.ToString() + " cue sheets found in path.\n");
+
+                for (var i = 0; i < files.Length; i++)
+                {
+                    tracks = new List<Track>();
+                    SplitCue(files[i]);
+                    CalcLengthAndByteOffsets();
+                    ProcessSegments();
+                }
+                Log("Done\n");
+                Alert("Done");
+                Exit();
+                return;
+            }catch(Exception e)
             {
-                tracks = new List<Track>();
-                SplitCue(files[i]);
-                CalcLengthAndByteOffsets();
-                ProcessSegments();
+                FatalExit(e.Message);
+                return;
             }
-            app.Log("Done\n");
-            app.Alert("Done");
-            app.Exit();
-            return;
         }
 
 
@@ -116,7 +146,7 @@ namespace CueToOgg
                 "-f s16le -ar 44100 -ac 2 -i \"" + outPath + "\" -aq 8 \"" + outOgg + "\""
                 );
 
-            app.Log("Encoding file " + outOgg + "\n");
+            Log("Encoding file " + outOgg + "\n");
             p.StartSilent();
 
             File.Delete(outPath);
