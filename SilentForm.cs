@@ -4,9 +4,9 @@ using System.Windows.Forms;
 
 namespace CueToOgg
 {
-    public partial class MainForm : LoggerForm
+    public partial class SilentForm : LoggerForm
     {
-        public MainForm()
+        public SilentForm()
         {
             InitializeComponent();
             Alert = new AlertDelegate(AlertMethod);
@@ -15,12 +15,11 @@ namespace CueToOgg
             Log = new LogDelegate(LogMethod);
             ReportProgress = new ReportProgressDelegate(ReportProgressMethod);
         }
-        
+
         public new void AlertMethod(string message)
         {
-            MessageBox.Show(message);
         }
-        
+
         public new void ExitMethod()
         {
             if (converterThread != null && converterThread.ThreadState==ThreadState.Running)
@@ -36,22 +35,22 @@ namespace CueToOgg
             AlertMethod(reason);
             ExitMethod();
         }
-        
-        public new void LogMethod(string message)
-        {
-            logArea.AppendText(message);
-        }
 
+        public new void ReportProgressMethod(int arg)
+        {
+            this.progressBar1.Value = arg;
+        }
 
         private Thread converterThread=null;
         private void AfterFormLoad(object sender, EventArgs e)
         {
+            CenterToScreen();
             var thread = new Thread(new ThreadStart(StartProcessing));
             thread.SetApartmentState(ApartmentState.STA);
             thread.Start();
         }
 
-
+        
         private void StartProcessing()
         {
             var c = new CueDirectoryConverter(this);

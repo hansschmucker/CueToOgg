@@ -16,7 +16,27 @@ namespace CueToOgg
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainForm());
+
+            var args = Environment.GetCommandLineArgs();
+
+            for(var i = 0; i < args.Length; i++)
+            {
+                if (args[i].Length > 3 && args[i].Substring(0,2)=="--" && i<args.Length-1)
+                {
+                    cmdArgs.Add(args[i], args[i+1]);
+                }
+            }
+            if (cmdArgs.ContainsKey("--silent") && cmdArgs["--silent"]=="enable")
+            {
+                Application.Run(new SilentForm());
+            }
+            else
+            {
+
+                Application.Run(new MainForm());
+            }
         }
+
+        public static Dictionary<string, string> cmdArgs = new Dictionary<string, string>();
     }
 }

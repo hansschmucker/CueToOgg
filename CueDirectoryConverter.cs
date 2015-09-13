@@ -13,9 +13,9 @@ namespace CueToOgg
 
         public List<Track> tracks;
 
-        public MainForm app;
+        public LoggerForm app;
 
-        public CueDirectoryConverter(MainForm aApp)
+        public CueDirectoryConverter(LoggerForm aApp)
         {
             app = aApp;
         }
@@ -42,6 +42,12 @@ namespace CueToOgg
         {
             if (app.Created)
                 app.Invoke(app.Alert, new object[] { (string)message });
+        }
+
+        private void ReportProgress(int message)
+        {
+            if (app.Created)
+                app.Invoke(app.ReportProgress, new object[] { (int)message });
         }
 
         public void StartProcessing()
@@ -78,8 +84,11 @@ namespace CueToOgg
 
                 Log(files.Length.ToString() + " cue sheets found in path.\n");
 
+                numFiles = files.Length;
                 for (var i = 0; i < files.Length; i++)
                 {
+                    currentFileIndex = i;
+                    ReportProgress(currentFileIndex*100/files.Length);
                     tracks = new List<Track>();
                     SplitCue(files[i]);
                     CalcLengthAndByteOffsets();
@@ -95,6 +104,10 @@ namespace CueToOgg
                 return;
             }
         }
+
+        private int currentFileIndex = 0;
+        private int numFiles = 0;
+        
 
 
         private void CalcLengthAndByteOffsets()
@@ -155,8 +168,10 @@ namespace CueToOgg
 
         private void ProcessSegments()
         {
+
             for (var i = 0; i < tracks.Count; i++)
             {
+                ReportProgress((currentFileIndex*tracks.Count+i)*100/(numFiles*tracks.Count));
                 ExtractSegment(tracks[i]);
             }
         }
