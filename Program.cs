@@ -23,7 +23,10 @@ namespace CueToOgg
             {
                 if (args[i].Length > 3 && args[i].Substring(0,2)=="--" && i<args.Length-1)
                 {
-                    cmdArgs.Add(args[i], args[i+1]);
+                    if (!cmdArgs.ContainsKey(args[i]))
+                        cmdArgs.Add(args[i], args[i + 1]);
+                    else
+                        cmdArgs[args[i]] += ";" + args[i + 1];
                 }
             }
             if (cmdArgs.ContainsKey("--silent") && cmdArgs["--silent"]=="enable")

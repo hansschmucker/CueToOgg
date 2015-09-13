@@ -57,14 +57,24 @@ namespace CueToOgg
                 if (!File.Exists(Path.GetDirectoryName(Application.ExecutablePath) + "\\bin\\ffmpeg.exe"))
                     throw new Exception("FFMPEG not found. Cannot continue.\n");
 
-                string[] files;
+                string[] files=null;
 
-                if (Program.cmdArgs.ContainsKey("--path") && Directory.Exists(Program.cmdArgs["--path"])){
+                if (Program.cmdArgs.ContainsKey("--file"))
+                {
+                    var fileCandidates = Program.cmdArgs["--file"].Split(';');
+                    var found = new List<string>();
+                    for(var i = 0; i < fileCandidates.Length; i++)
+                    {
+                        if (File.Exists(fileCandidates[i]))
+                            found.Add(fileCandidates[i]);
+                    }
+                    if (found.Count > 0)
+                        files = found.ToArray();
+                }else if (Program.cmdArgs.ContainsKey("--path") && Directory.Exists(Program.cmdArgs["--path"])){
                     files =
                     Directory.GetFiles(Program.cmdArgs["--path"], "*.cue").Concat(
                     Directory.GetFiles(Program.cmdArgs["--path"], "*.inst")).ToArray();
-                }
-                else { 
+                } else { 
                     files =
                     Directory.GetFiles(Path.GetDirectoryName(Application.ExecutablePath), "*.cue").Concat(
                     Directory.GetFiles(Path.GetDirectoryName(Application.ExecutablePath), "*.inst")).ToArray()
