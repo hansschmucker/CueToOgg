@@ -58,10 +58,18 @@ namespace CueToOgg
                     throw new Exception("FFMPEG not found. Cannot continue.\n");
 
                 string[] files;
-                files =
+
+                if (Program.cmdArgs.ContainsKey("--path") && Directory.Exists(Program.cmdArgs["--path"])){
+                    files =
+                    Directory.GetFiles(Program.cmdArgs["--path"], "*.cue").Concat(
+                    Directory.GetFiles(Program.cmdArgs["--path"], "*.inst")).ToArray();
+                }
+                else { 
+                    files =
                     Directory.GetFiles(Path.GetDirectoryName(Application.ExecutablePath), "*.cue").Concat(
                     Directory.GetFiles(Path.GetDirectoryName(Application.ExecutablePath), "*.inst")).ToArray()
                     ;
+                }
 
                 if (files == null || files.Length == 0)
                 {
