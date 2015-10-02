@@ -178,7 +178,7 @@ namespace CueToOgg
                 );
 
             Log("Encoding file " + outOgg + "\n");
-            p.StartSilent();
+            p.StartSilent(app);
 
             File.Delete(outPath);
 
