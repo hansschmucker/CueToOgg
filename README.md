@@ -4,11 +4,11 @@ ORIGINS
 
 This program originates at the GOG Quake forum... so that's it's home:
 
-http://www.gog.com/forum/quake_the_offering/my_oneclick_audioextractor
+https://www.gog.com/forum/quake_series/my_oneclick_audioextractor
 
 DOWNLOAD
 
-http://www.tapper-ware.net/files/CueToOgg.zip
+https://github.com/hansschmucker/CueToOgg/tree/master/Binaries
 
 LICENSE
 
