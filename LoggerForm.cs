@@ -10,7 +10,9 @@ namespace CueToOgg
 {
     public class LoggerForm : Form
     {
-        public LoggerForm() { }
+        public LoggerForm() {
+
+        }
             
         public delegate void AlertDelegate(string arg);
         public AlertDelegate Alert;
@@ -27,6 +29,10 @@ namespace CueToOgg
         public delegate void LogDelegate(string arg);
         public LogDelegate Log;
         public void LogMethod(string message){}
+
+        public delegate void InfoDelegate(string arg);
+        public InfoDelegate Info;
+        public void InfoMethod(string message) { }
 
         public delegate void ReportProgressDelegate(int arg);
         public ReportProgressDelegate ReportProgress;

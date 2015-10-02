@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -6,7 +8,10 @@ namespace CueToOgg
 {
     public partial class MainForm : LoggerForm
     {
-        public MainForm()
+
+        private FileStream logfile;
+
+        public MainForm():base()
         {
             InitializeComponent();
             Alert = new AlertDelegate(AlertMethod);
@@ -14,6 +19,9 @@ namespace CueToOgg
             FatalExit = new FatalExitDelegate(FatalExitMethod);
             Log = new LogDelegate(LogMethod);
             ReportProgress = new ReportProgressDelegate(ReportProgressMethod);
+            Info = new InfoDelegate(InfoMethod);
+
+            logfile = File.OpenWrite(Path.GetDirectoryName(Application.ExecutablePath) + "\\cuetoogg.log.txt");
         }
         
         public new void AlertMethod(string message)
@@ -40,8 +48,14 @@ namespace CueToOgg
         public new void LogMethod(string message)
         {
             logArea.AppendText(message);
+            InfoMethod(message);
         }
 
+        public new void InfoMethod(string message)
+        {
+            var msg = Encoding.UTF8.GetBytes(message+"\n");
+            logfile.Write(msg, 0, msg.Length);
+        }
 
         private Thread converterThread=null;
         private void AfterFormLoad(object sender, EventArgs e)
@@ -64,6 +78,7 @@ namespace CueToOgg
             {
                 converterThread.Abort();
             }
+            logfile.Close();
         }
     }
 }
